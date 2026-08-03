@@ -10,13 +10,15 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 * **☀️ Full Day Shift (9.5 Hours Base)**: 
   * Flexible morning clock-in window (**07:00 AM – 09:30 AM**).
   * Prominently displays both **1st Half Day Leave (+4.75 hours)** and **Full Day Clock-Out (+9.5 hours)**.
+* **🌅 1st Half Leave Shift (4.75 Hours Base)**:
+  * Morning shift with clock-in window (**07:00 AM – 09:30 AM**) targeting leave time (**11:45 AM – 02:15 PM**).
 * **🌆 2nd Half Day Shift (4.75 Hours Base)**:
   * Afternoon shift window (**11:45 AM – 02:15 PM**).
   * Clock-ins before 11:45 AM are clamped to the 11:45 AM minimum floor.
 * **🌅 Early Clock-In Floor Clamping**:
-  * Clocking in before `07:00 AM` for Full Day shifts automatically clamps calculation starting from `07:00 AM`.
+  * Clocking in before `07:00 AM` for Full Day / 1st Half shifts automatically clamps calculation starting from `07:00 AM`.
 * **⚠️ Late Clock-In & 7:00 PM Max Capping**:
-  * Clock-ins after `09:30 AM` (Full Day) or `02:15 PM` (2nd Half) display exact late duration and cap the standard clock-out time at **19:00 (7:00 PM) MAX**.
+  * Clock-ins after `09:30 AM` (Full Day / 1st Half) or `02:15 PM` (2nd Half) display exact late duration and strictly cap standard clock-out at **19:00 (7:00 PM) MAX** (with midnight wrap protection).
 
 ---
 
@@ -30,8 +32,8 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 
 ### 3. 📊 Shift Progress & OT Breakdown
 * **Live Progress & Countdown**: Real-time progress bar (0–100%) and dynamic countdown showing hours, minutes, and seconds remaining until clock-out.
-* **📋 Official 3-Column Schedule & Lookup Matrix**: Interactive table matching official company schedule lookup tables with active row highlighting.
-* **📊 Overtime Breakdown**: Auto-calculated clock-out times for 1 to 4 hours of OT (1st hour includes mandatory 10-minute break gap).
+* **📋 Official 3-Column Schedule & Lookup Matrix**: Interactive table matching official company schedule lookup tables with active row highlighting and mode-aware 5-minute step intervals.
+* **📊 Overtime Breakdown**: Auto-calculated clock-out times for 1.0h to 4.0h of OT in **30-minute intervals** (1st hour includes mandatory 10-minute break gap).
 
 ---
 

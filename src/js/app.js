@@ -4,7 +4,8 @@ function App() {
     // --- STATE MANAGEMENT ---
     const [shiftMode, setShiftMode] = useState(() => {
         const saved = localStorage.getItem('sony_shift_mode');
-        return saved === 'half2' ? 'half2' : 'full';
+        if (saved === 'half1' || saved === 'half2') return saved;
+        return 'full'; // 'full', 'half1', 'half2'
     });
 
     const [timeIn, setTimeIn] = useState(() => {
@@ -249,8 +250,8 @@ function App() {
         let isClampedEarly = false;
         let clampFloorText = '';
 
-        // Clamping Rule 1: Full Day clock-in < 07:00 AM -> Clamped to 07:00 AM
-        if (shiftMode === 'full' && inMins < (7 * 60)) {
+        // Clamping Rule 1: Full Day / 1st Half clock-in < 07:00 AM -> Clamped to 07:00 AM
+        if ((shiftMode === 'full' || shiftMode === 'half1') && inMins < (7 * 60)) {
             calcTimeIn = "07:00";
             isClampedEarly = true;
             clampFloorText = "07:00 AM";
@@ -267,11 +268,15 @@ function App() {
         const [hHalf, mHalf] = halfDayExitRaw24.split(':').map(Number);
         const uncappedHalfMins = hHalf * 60 + mHalf;
 
+        const [calcH, calcM] = calcTimeIn.split(':').map(Number);
+        const calcInMins = calcH * 60 + calcM;
+
         const max7pmMins = 19 * 60; // 19:00 / 7:00 PM
         let halfDayExit24 = halfDayExitRaw24;
         let isHalfCapped = false;
 
-        if (shiftMode === 'half2' && uncappedHalfMins > max7pmMins) {
+        // Cap half day exit at 7:00 PM max (also detect midnight wrap)
+        if (uncappedHalfMins > max7pmMins || uncappedHalfMins < calcInMins) {
             halfDayExit24 = "19:00";
             isHalfCapped = true;
         }
@@ -285,9 +290,10 @@ function App() {
         let fullDayExit24 = fullDayExitRaw24;
         let isCapped = false;
 
-        if (shiftMode === 'full' && uncappedOutMins > max7pmMins) {
+        // Always cap full day exit at 7:00 PM max (also detect midnight wrap)
+        if (uncappedOutMins > max7pmMins || uncappedOutMins < calcInMins) {
             fullDayExit24 = "19:00";
-            isCapped = true;
+            if (shiftMode === 'full' || shiftMode === 'half1') isCapped = true;
         }
         if (shiftMode === 'half2' && isHalfCapped) {
             isCapped = true;
@@ -303,8 +309,8 @@ function App() {
 
         if (isClampedEarly) {
             type = 'clamped_early';
-        } else if (shiftMode === 'full') {
-            const flexStartMins = 7 * 60 + 30; // 07:30 AM
+        } else if (shiftMode === 'full' || shiftMode === 'half1') {
+            const flexStartMins = 7 * 60;     // 07:00 AM
             const flexEndMins = 9 * 60 + 30;   // 09:30 AM
             flexLimitText = '09:30 AM';
 
@@ -336,19 +342,26 @@ function App() {
 
         // Active target time based on mode
         let activeTarget24 = fullDayExit24;
+        if (shiftMode === 'half1') activeTarget24 = halfDayExit24;
         if (shiftMode === 'half2') activeTarget24 = halfDayExit24;
 
-        // OT Table
-        const ot1 = addTime(activeTarget24, 1, 10);
-        const ot2 = addTime(ot1, 1, 0);
-        const ot3 = addTime(ot2, 1, 0);
-        const ot4 = addTime(ot3, 1, 0);
+        // OT Table (30-min intervals from 1h to 4h, first hour includes 10-min break)
+        const ot1h   = addTime(activeTarget24, 1, 10);   // 1h OT (+10m break)
+        const ot1h30 = addTime(ot1h, 0, 30);             // 1.5h OT
+        const ot2h   = addTime(ot1h, 1, 0);              // 2h OT
+        const ot2h30 = addTime(ot2h, 0, 30);             // 2.5h OT
+        const ot3h   = addTime(ot2h, 1, 0);              // 3h OT
+        const ot3h30 = addTime(ot3h, 0, 30);             // 3.5h OT
+        const ot4h   = addTime(ot3h, 1, 0);              // 4h OT
 
         const otTableRows = [
-            { label: "1 Hour OT", duration: "+1h 10m (with break)", time: ot1, time12: format12h(ot1) },
-            { label: "2 Hours OT", duration: "+2h 10m", time: ot2, time12: format12h(ot2) },
-            { label: "3 Hours OT", duration: "+3h 10m", time: ot3, time12: format12h(ot3) },
-            { label: "4 Hours OT", duration: "+4h 10m", time: ot4, time12: format12h(ot4) },
+            { label: "1 Hour OT",     duration: "+1h 10m (incl. break)", time: ot1h,   time12: format12h(ot1h) },
+            { label: "1.5 Hours OT",  duration: "+1h 40m",              time: ot1h30, time12: format12h(ot1h30) },
+            { label: "2 Hours OT",    duration: "+2h 10m",              time: ot2h,   time12: format12h(ot2h) },
+            { label: "2.5 Hours OT",  duration: "+2h 40m",              time: ot2h30, time12: format12h(ot2h30) },
+            { label: "3 Hours OT",    duration: "+3h 10m",              time: ot3h,   time12: format12h(ot3h) },
+            { label: "3.5 Hours OT",  duration: "+3h 40m",              time: ot3h30, time12: format12h(ot3h30) },
+            { label: "4 Hours OT",    duration: "+4h 10m",              time: ot4h,   time12: format12h(ot4h) },
         ];
 
         return {
@@ -373,36 +386,64 @@ function App() {
         };
     }, [timeIn, shiftMode]);
 
-    // --- OFFICIAL LOOKUP MATRIX DATA (5-MIN STEP INTERVALS 07:00 to 09:30) ---
+    // --- OFFICIAL LOOKUP MATRIX DATA (5-MIN STEP INTERVALS) ---
     const lookupMatrix = useMemo(() => {
         const rows = [];
-        let currMins = 7 * 60; // 07:00 AM
-        const endMins = 9 * 60 + 30; // 09:30 AM
 
-        while (currMins <= endMins) {
-            const h = Math.floor(currMins / 60);
-            const m = currMins % 60;
-            const tIn24 = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            const tIn12 = format12h(tIn24);
+        if (shiftMode === 'half2') {
+            // 2nd Half lookup: 11:45 AM to 2:15 PM
+            let currMins = 11 * 60 + 45; // 11:45 AM
+            const endMins = 14 * 60 + 15; // 2:15 PM
 
-            const tHalf24 = addTime(tIn24, 4, 45);
-            const tHalf12 = format12h(tHalf24);
+            while (currMins <= endMins) {
+                const h = Math.floor(currMins / 60);
+                const m = currMins % 60;
+                const tIn24 = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                const tIn12 = format12h(tIn24);
 
-            const tOut24 = addTime(tIn24, 9, 30);
-            const tOut12 = format12h(tOut24);
+                const tHalf24 = addTime(tIn24, 4, 45);
+                const tHalf12 = format12h(tHalf24);
 
-            rows.push({
-                tIn24,
-                tIn12,
-                tHalf12,
-                tOut12,
-                isCurrent: tIn24 === timeIn
-            });
+                rows.push({
+                    tIn24,
+                    tIn12,
+                    tHalf12,
+                    tOut12: tHalf12, // For 2nd Half, clock-out = half day exit
+                    isCurrent: tIn24 === timeIn
+                });
 
-            currMins += 5;
+                currMins += 5;
+            }
+        } else {
+            // Full Day / 1st Half lookup: 07:00 AM to 09:30 AM
+            let currMins = 7 * 60; // 07:00 AM
+            const endMins = 9 * 60 + 30; // 09:30 AM
+
+            while (currMins <= endMins) {
+                const h = Math.floor(currMins / 60);
+                const m = currMins % 60;
+                const tIn24 = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                const tIn12 = format12h(tIn24);
+
+                const tHalf24 = addTime(tIn24, 4, 45);
+                const tHalf12 = format12h(tHalf24);
+
+                const tOut24 = addTime(tIn24, 9, 30);
+                const tOut12 = format12h(tOut24);
+
+                rows.push({
+                    tIn24,
+                    tIn12,
+                    tHalf12,
+                    tOut12,
+                    isCurrent: tIn24 === timeIn
+                });
+
+                currMins += 5;
+            }
         }
         return rows;
-    }, [timeIn]);
+    }, [timeIn, shiftMode]);
 
     // --- SHIFT PROGRESS & COUNTDOWN ---
     const shiftStats = useMemo(() => {
@@ -504,6 +545,12 @@ function App() {
                             ☀️ Full Day (9.5h)
                         </button>
                         <button 
+                            className={`mode-btn ${shiftMode === 'half1' ? 'active' : ''}`}
+                            onClick={() => handleModeChange('half1')}
+                        >
+                            🌅 1st Half Leave (4.75h)
+                        </button>
+                        <button 
                             className={`mode-btn ${shiftMode === 'half2' ? 'active' : ''}`}
                             onClick={() => handleModeChange('half2')}
                         >
@@ -518,17 +565,17 @@ function App() {
                                 🌅 Early Floor ({calcResults.clampFloorText})
                             </span>
                         )}
-                        {!calcResults?.isClampedEarly && shiftMode === 'full' && calcResults?.type === 'early' && (
+                        {!calcResults?.isClampedEarly && (shiftMode === 'full' || shiftMode === 'half1') && calcResults?.type === 'early' && (
                             <span className="status-pill pill-info">
                                 🌅 Early by {calcResults.earlyText}
                             </span>
                         )}
-                        {!calcResults?.isClampedEarly && shiftMode === 'full' && calcResults?.type === 'late' && (
+                        {!calcResults?.isClampedEarly && (shiftMode === 'full' || shiftMode === 'half1') && calcResults?.type === 'late' && (
                             <span className="status-pill pill-error">
                                 ⚠️ Late by {calcResults.lateText}
                             </span>
                         )}
-                        {!calcResults?.isClampedEarly && shiftMode === 'full' && calcResults?.type === 'valid' && (
+                        {!calcResults?.isClampedEarly && (shiftMode === 'full' || shiftMode === 'half1') && calcResults?.type === 'valid' && (
                             <span className="status-pill pill-success">
                                 ✓ DS4 Valid Flex
                             </span>
@@ -607,7 +654,7 @@ function App() {
                             </div>
                         )}
 
-                        {!calcResults?.isClampedEarly && shiftMode === 'full' && calcResults?.type === 'late' && (
+                        {!calcResults?.isClampedEarly && (shiftMode === 'full' || shiftMode === 'half1') && calcResults?.type === 'late' && (
                             <div className="note-box error">
                                 <span className="note-icon">🚨</span>
                                 <div>
@@ -652,16 +699,16 @@ function App() {
                                     <small className="s-sub">{calcResults.isClampedEarly ? `Counts as ${calcResults.clampFloorText}` : timeIn}</small>
                                 </div>
 
-                                <div className="summary-box box-half">
-                                    <span className="s-label">Half Day</span>
+                                <div className={`summary-box box-half ${shiftMode === 'half1' ? 'active-mode' : ''}`}>
+                                    <span className="s-label">1st Half Leave</span>
                                     <span className="s-time">{calcResults.halfDayExit12}</span>
-                                    <small className="s-sub">+4h 45m {shiftMode === 'half2' && calcResults.isCapped ? '(Capped 7pm)' : ''}</small>
+                                    <small className="s-sub">+4h 45m</small>
                                 </div>
 
-                                <div className={`summary-box box-out ${shiftMode === 'full' ? 'active-mode' : ''}`}>
-                                    <span className="s-label">Time OUT</span>
-                                    <span className="s-time">{calcResults.fullDayExit12}</span>
-                                    <small className="s-sub">+9h 30m {calcResults.isCapped ? '(Capped 7pm)' : ''}</small>
+                                <div className={`summary-box box-out ${shiftMode === 'full' || shiftMode === 'half2' ? 'active-mode' : ''}`}>
+                                    <span className="s-label">{shiftMode === 'half2' ? '2nd Half OUT' : 'Time OUT'}</span>
+                                    <span className="s-time">{shiftMode === 'half2' ? calcResults.halfDayExit12 : calcResults.fullDayExit12}</span>
+                                    <small className="s-sub">{shiftMode === 'half2' ? '+4h 45m' : '+9h 30m'} {calcResults.isCapped ? '(Capped 7pm)' : ''}</small>
                                 </div>
                             </div>
                         </div>
@@ -671,7 +718,7 @@ function App() {
                     <div className={`hero-timeout-card ${calcResults?.isCapped ? 'hero-capped' : ''}`}>
                         <div className="hero-top">
                             <span className="hero-label">
-                                {shiftMode === 'full' ? 'Target Full Day Clock-Out' : 'Target 2nd Half Clock-Out'}
+                                {shiftMode === 'full' ? 'Target Full Day Clock-Out' : shiftMode === 'half1' ? 'Target 1st Half Leave' : 'Target 2nd Half Clock-Out'}
                             </span>
                             <span className="hero-badge">
                                 {calcResults?.isCapped ? '⚠️ Capped Max 7:00 PM' : (shiftMode === 'full' ? '9.5 Hours Base' : '4.75 Hours Half Shift')}
@@ -685,7 +732,7 @@ function App() {
                         
                         {calcResults?.isCapped && (
                             <div className="capped-subtext">
-                                (Late by {calcResults.lateText} from {calcResults.flexLimitText} flex limit. Uncapped shift would end at {calcResults.uncappedExit12}, capped at 7:00 PM max)
+                                (Late by {calcResults.lateText} from {calcResults.flexLimitText} flex limit. Clock-out capped at 7:00 PM max)
                             </div>
                         )}
 
@@ -733,16 +780,28 @@ function App() {
                                     <thead>
                                         <tr>
                                             <th>Time IN</th>
-                                            <th>Half Day (+4.75h)</th>
-                                            <th>Time OUT (+9.5h)</th>
+                                            {shiftMode === 'half2' ? (
+                                                <th>Clock-Out (+4.75h)</th>
+                                            ) : (
+                                                React.createElement(React.Fragment, null,
+                                                    React.createElement('th', null, '1st Half Leave (+4.75h)'),
+                                                    React.createElement('th', null, 'Time OUT (+9.5h)')
+                                                )
+                                            )}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {lookupMatrix.map((row, index) => (
                                             <tr key={index} className={row.isCurrent ? 'row-active' : ''} onClick={() => handleTimeInChange(row.tIn24)}>
                                                 <td className="cell-in">{row.tIn12}</td>
-                                                <td className="cell-half">{row.tHalf12}</td>
-                                                <td className="cell-out">{row.tOut12}</td>
+                                                {shiftMode === 'half2' ? (
+                                                    <td className="cell-out">{row.tOut12}</td>
+                                                ) : (
+                                                    React.createElement(React.Fragment, null,
+                                                        React.createElement('td', { className: 'cell-half' }, row.tHalf12),
+                                                        React.createElement('td', { className: 'cell-out' }, row.tOut12)
+                                                    )
+                                                )}
                                             </tr>
                                         ))}
                                     </tbody>
