@@ -22,8 +22,74 @@ function App() {
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     });
     
+    // Portfolio URL State with persistent localStorage
+    const [portfolioUrl, setPortfolioUrl] = useState(() => {
+        const saved = localStorage.getItem('sony_portfolio_url');
+        if (saved) return saved;
+        return 'https://portfolio.ilhameffendy.com';
+    });
+
+    const handleEditPortfolioUrl = (e) => {
+        if (e.shiftKey || e.altKey) {
+            e.preventDefault();
+            const newUrl = prompt("Enter your Portfolio URL:", portfolioUrl);
+            if (newUrl !== null && newUrl.trim() !== '') {
+                const formatted = newUrl.trim().startsWith('http') ? newUrl.trim() : `https://${newUrl.trim()}`;
+                setPortfolioUrl(formatted);
+                localStorage.setItem('sony_portfolio_url', formatted);
+            }
+        }
+    };
+    
     // Live Date & Time State
     const [currentDate, setCurrentDate] = useState(new Date());
+
+    // Auto Resolution & Device Detection State
+    const [screenRes, setScreenRes] = useState(() => ({
+        width: typeof window !== 'undefined' ? window.innerWidth : 1280,
+        height: typeof window !== 'undefined' ? window.innerHeight : 800,
+        dpr: typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1,
+        deviceType: 'Desktop'
+    }));
+
+    // Auto Resolution Adjustment & Responsive Viewport Calculator
+    useEffect(() => {
+        const updateResolution = () => {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const dpr = parseFloat((window.devicePixelRatio || 1).toFixed(2));
+
+            let deviceType = 'Desktop';
+            if (w <= 480) deviceType = 'Mobile';
+            else if (w <= 859) deviceType = 'Tablet';
+            else if (w <= 1440) deviceType = 'Laptop';
+            else deviceType = '4K Display';
+
+            setScreenRes({ width: w, height: h, dpr, deviceType });
+
+            const doc = document.documentElement;
+            doc.style.setProperty('--window-width', `${w}px`);
+            doc.style.setProperty('--window-height', `${h}px`);
+            doc.style.setProperty('--vh', `${h * 0.01}px`);
+
+            if (w >= 1920) {
+                doc.style.setProperty('--auto-scale', `${Math.min(1.25, Math.max(1, w / 1920))}`);
+            } else if (w <= 360) {
+                doc.style.setProperty('--auto-scale', '0.92');
+            } else {
+                doc.style.setProperty('--auto-scale', '1');
+            }
+        };
+
+        updateResolution();
+        window.addEventListener('resize', updateResolution);
+        window.addEventListener('orientationchange', updateResolution);
+
+        return () => {
+            window.removeEventListener('resize', updateResolution);
+            window.removeEventListener('orientationchange', updateResolution);
+        };
+    }, []);
 
     // Weather States
     const [weatherData, setWeatherData] = useState(null);
@@ -515,7 +581,13 @@ function App() {
             <header className="app-header">
                 <div className="header-brand">
                     <img src="assets/icons/app-icon.png" alt="Sony Clock Icon" className="app-header-logo" />
-                    <div className="logo-badge">DS4</div>
+                    <div className="logo-badge-group">
+                        <span className="logo-badge">DS4</span>
+                        <span className="res-badge" title={`Auto Device Resolution: ${screenRes.width}x${screenRes.height} @ ${screenRes.dpr}x DPR (${screenRes.deviceType})`}>
+                            <i className={screenRes.deviceType === 'Mobile' ? 'fa-solid fa-mobile-screen' : screenRes.deviceType === 'Tablet' ? 'fa-solid fa-tablet-screen-button' : screenRes.deviceType === 'Laptop' ? 'fa-solid fa-laptop' : 'fa-solid fa-desktop'}></i>
+                            <span>{screenRes.width}×{screenRes.height}</span>
+                        </span>
+                    </div>
                     <div>
                         <h1>Sony Bangi — Go Home Calculator</h1>
                         <p className="subhead">Flexible Shift & Overtime Management System</p>
@@ -527,6 +599,17 @@ function App() {
                         <span className="live-date">{formattedDate}</span>
                         <span className="live-time">{formattedTime}</span>
                     </div>
+                    <a 
+                        href={portfolioUrl} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="portfolio-btn" 
+                        title="Back to Portfolio (Shift+Click to edit URL)"
+                        onClick={handleEditPortfolioUrl}
+                    >
+                        <i className="fa-solid fa-user portfolio-btn-icon"></i>
+                        <span className="portfolio-btn-text">Portfolio</span>
+                    </a>
                     <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
                         {theme === 'light' ? '🌙' : '☀️'}
                     </button>
@@ -872,6 +955,28 @@ function App() {
                     </div>
                 </section>
             </main>
+
+            <footer className="app-footer">
+                <div className="footer-content">
+                    <div className="footer-left">
+                        <span className="footer-text">Sony Bangi — Go Home Calculator</span>
+                        <span className="footer-res-pill">
+                            <i className="fa-solid fa-display"></i> {screenRes.deviceType} ({screenRes.width}×{screenRes.height} px)
+                        </span>
+                    </div>
+                    <a 
+                        href={portfolioUrl} 
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="footer-portfolio-link"
+                        title="Back to Portfolio (Shift+Click to edit URL)"
+                        onClick={handleEditPortfolioUrl}
+                    >
+                        <i className="fa-solid fa-user"></i>
+                        <span>Portfolio</span>
+                    </a>
+                </div>
+            </footer>
         </div>
     );
 }

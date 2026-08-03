@@ -41,6 +41,8 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 * **🌤️ Live Weather for Sony Bangi**: Real-time local temperature and weather status via Open-Meteo API.
 * **🕌 Islamic Prayer Times (Zone SGR01)**: Live today's prayer times (Subuh, Zohor, Asar, Maghrib, Isyak) via WaktuSolat API with live countdown to the next prayer.
 * **🌙 Dark / Light Mode**: Seamless dark and light themes with automatic system preference detection and `localStorage` persistence.
+* **👤 Portfolio Navigation**: Direct "Portfolio" button in header and footer pointing to [portfolio.ilhameffendy.com](https://portfolio.ilhameffendy.com) (Shift+Click to edit destination URL).
+* **🖥️ Auto Device Resolution & Responsive Scaling**: Real-time screen resolution detector and adaptive scaling system (`Mobile`, `Tablet`, `Laptop`, `4K Display`) that automatically optimizes typography, spacing, and layout scaling based on the connected device.
 
 ---
 
