@@ -53,6 +53,30 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 
 ---
 
+## 📁 Project Structure
+
+```text
+Sony Clock reactjs/
+├── index.html            # Main HTML entry point
+├── manifest.json         # PWA Manifest (Add to Home Screen)
+├── README.md             # Project documentation
+├── .gitignore            # Git exclusion rules
+├── assets/               # Static media & icon assets
+│   └── icons/
+│       ├── app-icon.png         # Navbar logo image
+│       ├── apple-touch-icon.png # iOS home screen icon
+│       ├── favicon.png          # Browser tab icon
+│       ├── icon-192.png         # PWA 192x192 icon
+│       └── icon-512.png         # PWA 512x512 icon
+└── src/                  # Application source code
+    ├── css/
+    │   └── style.css     # Design system & responsive styles
+    └── js/
+        └── app.js        # React 18 application logic
+```
+
+---
+
 ## 🚀 Getting Started
 
 Since this is a lightweight React CDN single-page application, no build process or package installation (`npm install`) is required!

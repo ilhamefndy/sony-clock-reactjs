@@ -473,6 +473,7 @@ function App() {
         <div className="app-viewport">
             <header className="app-header">
                 <div className="header-brand">
+                    <img src="assets/icons/app-icon.png" alt="Sony Clock Icon" className="app-header-logo" />
                     <div className="logo-badge">DS4</div>
                     <div>
                         <h1>Sony Bangi — Go Home Calculator</h1>
