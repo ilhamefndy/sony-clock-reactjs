@@ -201,18 +201,6 @@ function App() {
         localStorage.setItem('sony_time_in', formatted);
     };
 
-    const setTimeToNow = () => {
-        const now = new Date();
-        let hours = now.getHours();
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        if (shiftMode === 'full' && hours >= 12) {
-            hours = hours % 12;
-        }
-        const formatted = `${String(hours).padStart(2, '0')}:${minutes}`;
-        setTimeIn(formatted);
-        localStorage.setItem('sony_time_in', formatted);
-    };
-
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
     };
@@ -543,13 +531,7 @@ function App() {
             <header className="app-header">
                 <div className="header-brand">
                     <img src="assets/icons/app-icon.png" alt="Sony Clock Icon" className="app-header-logo" />
-                    <div className="logo-badge-group">
-                        <span className="logo-badge">DS4</span>
-                        <span className="res-badge" title={`Auto Device Resolution: ${screenRes.width}x${screenRes.height} @ ${screenRes.dpr}x DPR (${screenRes.deviceType})`}>
-                            <i className={screenRes.deviceType === 'Mobile' ? 'fa-solid fa-mobile-screen' : screenRes.deviceType === 'Tablet' ? 'fa-solid fa-tablet-screen-button' : screenRes.deviceType === 'Laptop' ? 'fa-solid fa-laptop' : 'fa-solid fa-desktop'}></i>
-                            <span>{screenRes.width}×{screenRes.height}</span>
-                        </span>
-                    </div>
+                    <span className="logo-badge">DS4</span>
                     <div>
                         <h1>Sony Bangi — Go Home Calculator</h1>
                         <p className="subhead">Flexible Shift & Overtime Management System</p>
@@ -621,7 +603,7 @@ function App() {
                         )}
                         {shiftMode === 'half2' && !calcResults?.isClampedEarly && calcResults?.type === 'valid' && (
                             <span className="status-pill pill-success">
-                                ✓ Valid 2nd Half Window (11:45 AM – 2:15 PM)
+                                ✓ Valid 2nd Half
                             </span>
                         )}
                         {shiftMode === 'half2' && calcResults?.type === 'late_half2' && (
@@ -634,7 +616,7 @@ function App() {
                     <div className="input-section">
                         <label htmlFor="timeInInput">Enter Clock-In Time</label>
                         
-                        <div className="time-input-row">
+                        <div className="time-input-container">
                             <input 
                                 id="timeInInput"
                                 type="time" 
@@ -663,10 +645,6 @@ function App() {
                                     PM
                                 </button>
                             </div>
-
-                            <button className="btn-now" onClick={setTimeToNow} title="Set to Current Time">
-                                📍 Now
-                            </button>
                         </div>
 
                         {/* Quick Presets */}
@@ -871,28 +849,6 @@ function App() {
                     </div>
                 </section>
             </main>
-
-            <footer className="app-footer">
-                <div className="footer-content">
-                    <div className="footer-left">
-                        <span className="footer-text">Sony Bangi — Go Home Calculator</span>
-                        <span className="footer-res-pill">
-                            <i className="fa-solid fa-display"></i> {screenRes.deviceType} ({screenRes.width}×{screenRes.height} px)
-                        </span>
-                    </div>
-                    <a 
-                        href={portfolioUrl} 
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="footer-portfolio-link"
-                        title="Back to Portfolio (Shift+Click to edit URL)"
-                        onClick={handleEditPortfolioUrl}
-                    >
-                        <i className="fa-solid fa-user"></i>
-                        <span>Portfolio</span>
-                    </a>
-                </div>
-            </footer>
         </div>
     );
 }
