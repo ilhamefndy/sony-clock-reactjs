@@ -141,7 +141,7 @@ body {
     color: var(--text-body);
     min-height: 100vh;
     min-height: 100dvh;
-    padding: max(1rem, env(safe-area-inset-top, 1rem)) max(0.75rem, env(safe-area-inset-right, 0.75rem)) max(1.5rem, env(safe-area-inset-bottom, 1.5rem)) max(0.75rem, env(safe-area-inset-left, 0.75rem));
+    padding: max(0.85rem, env(safe-area-inset-top, 0.85rem)) max(0.75rem, env(safe-area-inset-right, 0.75rem)) max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem)) max(0.75rem, env(safe-area-inset-left, 0.75rem));
     transition: background-color 0.4s ease, color 0.4s ease;
     overflow-x: hidden;
     letter-spacing: -0.01em;
@@ -418,6 +418,7 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 0.5rem;
+    width: 100%;
 }
 
 .card-header h2 {
@@ -429,13 +430,20 @@ body {
 
 /* iOS Glass Status Pills */
 .status-pill {
-    font-size: clamp(0.7rem, 2.2vw, 0.75rem);
+    font-size: clamp(0.68rem, 2.2vw, 0.75rem);
     font-weight: 600;
-    padding: 0.35rem 0.75rem;
+    padding: 0.35rem 0.65rem;
     border-radius: 20px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pill-success {
@@ -533,6 +541,12 @@ input[type="time"]:focus {
     box-shadow: 0 3px 10px var(--primary-glow);
 }
 
+.period-btn:disabled, .period-btn.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .btn-now {
     background: var(--primary-light);
     color: var(--primary);
@@ -622,7 +636,7 @@ input[type="time"]:focus {
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: clamp(0.35rem, 1.5vw, 0.5rem);
 }
 
@@ -763,14 +777,15 @@ input[type="time"]:focus {
 
 .hero-time-display {
     font-family: 'JetBrains Mono', SFMono-Regular, monospace;
-    font-size: clamp(2.1rem, 8vw, 3.2rem);
+    font-size: clamp(1.75rem, 6.2vw, 3.1rem);
     font-weight: 800;
-    letter-spacing: -1.5px;
+    letter-spacing: -1px;
     text-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     display: flex;
     align-items: baseline;
-    gap: 0.4rem;
+    gap: 0.35rem;
     flex-wrap: wrap;
+    line-height: 1.1;
 }
 
 .hero-time-24 {
@@ -1114,19 +1129,29 @@ input[type="time"]:focus {
     }
 }
 
-/* Smartphone Portrait / iPhone 13-17 / Android (max-width: 480px) */
+/* Smartphone Portrait / iPhone 13-17 / Standalone PWA / Android (max-width: 480px) */
 @media (max-width: 480px) {
     body {
-        padding: max(0.6rem, env(safe-area-inset-top, 0.6rem)) max(0.5rem, env(safe-area-inset-right, 0.5rem)) max(1rem, env(safe-area-inset-bottom, 1rem)) max(0.5rem, env(safe-area-inset-left, 0.5rem));
+        padding: max(0.6rem, env(safe-area-inset-top, 0.6rem)) max(0.5rem, env(safe-area-inset-right, 0.5rem)) max(4rem, calc(env(safe-area-inset-bottom, 0px) + 2.5rem)) max(0.5rem, env(safe-area-inset-left, 0.5rem));
     }
 
     .app-viewport {
-        gap: 1rem;
+        gap: 0.85rem;
+    }
+
+    .app-header {
+        padding: 0.85rem 0.75rem;
+        border-radius: 18px;
+    }
+
+    .header-brand h1 {
+        font-size: 1.05rem;
     }
 
     .dash-card {
-        padding: 1rem 0.85rem;
+        padding: 0.95rem 0.75rem;
         border-radius: 18px;
+        gap: 1rem;
     }
 
     .mode-selector {
@@ -1137,70 +1162,95 @@ input[type="time"]:focus {
 
     .mode-btn {
         font-size: 0.725rem;
-        padding: 0.55rem 0.25rem;
+        padding: 0.55rem 0.2rem;
+    }
+
+    .card-header {
+        gap: 0.35rem;
+    }
+
+    .card-header h2 {
+        font-size: 0.95rem;
     }
 
     .time-input-row {
         display: grid;
         grid-template-columns: 1fr auto auto;
-        gap: 0.4rem;
+        gap: 0.35rem;
     }
 
     input[type="time"] {
         min-width: 0;
         width: 100%;
-        padding: 0.55rem 0.5rem;
-        font-size: 1.2rem;
+        padding: 0.5rem 0.4rem;
+        font-size: 1.15rem;
         border-radius: 12px;
     }
 
     .period-btn {
-        padding: 0.45rem 0.5rem;
-        font-size: 0.775rem;
+        padding: 0.45rem 0.45rem;
+        font-size: 0.75rem;
     }
 
     .btn-now {
-        padding: 0.55rem 0.65rem;
-        font-size: 0.775rem;
+        padding: 0.5rem 0.55rem;
+        font-size: 0.75rem;
         border-radius: 12px;
     }
 
     .preset-buttons {
         grid-template-columns: repeat(3, 1fr);
-    }
-
-    .summary-grid {
-        grid-template-columns: repeat(3, 1fr);
         gap: 0.35rem;
     }
 
+    .btn-preset {
+        padding: 0.5rem 0.2rem;
+        font-size: 0.725rem;
+    }
+
+    .summary-grid {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+        gap: 0.3rem;
+    }
+
     .summary-box {
-        padding: 0.55rem 0.25rem;
+        padding: 0.5rem 0.15rem;
         border-radius: 12px;
     }
 
     .summary-box .s-time {
-        font-size: 0.825rem;
+        font-size: 0.8rem;
     }
 
     .summary-box .s-label {
-        font-size: 0.625rem;
+        font-size: 0.6rem;
     }
 
     .summary-box .s-sub {
-        font-size: 0.6rem;
+        font-size: 0.575rem;
     }
 
     .hero-timeout-card {
         border-radius: 18px;
+        padding: 0.95rem 0.75rem;
+        gap: 0.85rem;
+    }
+
+    .hero-top {
+        gap: 0.3rem;
     }
 
     .hero-time-display {
-        font-size: 2.15rem;
+        font-size: clamp(1.55rem, 5.5vw, 1.95rem);
+        gap: 0.25rem;
     }
 
     .hero-time-24 {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
+    }
+
+    .capped-subtext {
+        font-size: 0.7rem;
     }
 
     .weather-content {
@@ -1209,6 +1259,24 @@ input[type="time"]:focus {
 
     .weather-icon-large {
         font-size: 2.2rem;
+    }
+
+    .prayer-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.25rem;
+    }
+
+    .prayer-item {
+        padding: 0.5rem 0.1rem;
+        border-radius: 12px;
+    }
+
+    .p-name {
+        font-size: 0.6rem;
+    }
+
+    .p-time {
+        font-size: 0.725rem;
     }
 }
 
@@ -1224,11 +1292,11 @@ input[type="time"]:focus {
     }
 
     .prayer-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .hero-time-display {
-        font-size: 1.85rem;
+        font-size: 1.65rem;
     }
 }
 

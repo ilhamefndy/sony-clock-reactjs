@@ -4,6 +4,7 @@
   "description": "Flexible Shift & Overtime Management System for Sony Bangi Employees",
   "start_url": "./index.html",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#0b1329",
   "theme_color": "#0284c7",
   "icons": [
