@@ -9,6 +9,7 @@ description: >
   early clock-in floor clamping (clocking in before 07:00 AM counts as 07:00 AM; before 11:45 AM in 2nd Half counts as 11:45 AM),
   1-minute precision time picker with explicit AM/PM toggle,
   displays live weather for Sony Bangi (via Open-Meteo), Islamic prayer times for the SGR01 zone (via WaktuSolat API),
+  live IPU (Air Pollutant Index) for Putrajaya near Bangi (via Open-Meteo Air Quality API) with 5-band spectrum gauge & health advice,
   a live date/time clock, shift progress percentage with live countdown, quick-preset time selectors, persistent
   settings in localStorage, light/dark theme toggling, late-time calculation (after 09:30 AM for Full Day / after 02:15 PM for 2nd Half),
   explicit late-duration capping disclaimer ("Late by Xh Ym from 9:30 AM flex limit. Uncapped shift would end at 8:28 PM, capped at 7:00 PM max"),
@@ -34,8 +35,10 @@ This is a **single-page React 18 application** designed for Sony Bangi (Malaysia
 | **1-Minute Precision** | Step="60" on time picker allows exact minute clock-in entry & 12-hour AM/PM formatting |
 | **Late Clock-In & Capping** | If clock-in is after 09:30 AM (Full Day) or after 02:15 PM (2nd Half), displays exact minutes/hours late. Standard clock-out is **capped at MAX 19:00 (7:00 PM)** |
 | **Shift Progress & Countdown** | Real-time progress bar (0–100%) and dynamic time-remaining countdown |
-| **Overtime Table** | Auto-generated table showing clock-out times for 1–4 hours of OT (first OT hour includes a 10-min gap) |
+| **Overtime Table & "See More" Modal** | Compact main card showing 4-tier milestones (`1h`, `2h`, `3h`, `4h`) with a "See More" button opening an architecture modal dialog with 3-tier cards, full 30-min table, and copy schedule action |
 | **Live Weather** | Real-time weather for Sony Bangi from Open-Meteo with local temp & status messages |
+| **Live IPU (Putrajaya)** | Real-time Air Pollutant Index (IPU) from Putrajaya (~10km from Bangi) with 5-band spectrum gauge, health advice, and pollutant breakdown (PM2.5, PM10, O₃, NO₂) |
 | **Prayer Times** | Today's 5 prayer times (Subuh → Isyak) for zone SGR01 + next prayer countdown |
 | **Universal Responsive Layout** | 2-column grid dashboard on laptops/desktops & stacked single-column flow on smartphones |
 | **State Persistence** | Theme preference, selected shift mode, and last entered clock-in time persisted via `localStorage` |
+

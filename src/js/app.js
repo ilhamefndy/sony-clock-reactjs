@@ -44,6 +44,28 @@ function App() {
     // Live Date & Time State
     const [currentDate, setCurrentDate] = useState(new Date());
 
+    // OT Details Modal State
+    const [isOtModalOpen, setIsOtModalOpen] = useState(false);
+
+    // Lock body scroll and listen for Escape key when modal is open
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && isOtModalOpen) {
+                setIsOtModalOpen(false);
+            }
+        };
+        if (isOtModalOpen) {
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', handleKeyDown);
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isOtModalOpen]);
+
     // Auto Resolution & Device Detection State
     const [screenRes, setScreenRes] = useState(() => ({
         width: typeof window !== 'undefined' ? window.innerWidth : 1280,
@@ -101,6 +123,17 @@ function App() {
     // Weather States
     const [weatherData, setWeatherData] = useState(null);
 
+    // IPU (Air Pollutant Index) Putrajaya States
+    const [ipuData, setIpuData] = useState(() => {
+        try {
+            const cached = localStorage.getItem('sony_ipu_cache');
+            return cached ? JSON.parse(cached) : null;
+        } catch {
+            return null;
+        }
+    });
+    const [ipuLoading, setIpuLoading] = useState(false);
+
     // Prayer Time States
     const [prayerTimes, setPrayerTimes] = useState([]);
     const [nextPrayer, setNextPrayer] = useState(null);
@@ -136,12 +169,22 @@ function App() {
     useEffect(() => {
         fetchWeather();
         fetchPrayerTimes();
+        fetchIpu();
 
         const timer = setInterval(() => {
             setCurrentDate(new Date());
         }, 1000);
 
-        return () => clearInterval(timer);
+        // Auto-refresh weather & IPU every 15 minutes
+        const pollTimer = setInterval(() => {
+            fetchWeather();
+            fetchIpu();
+        }, 15 * 60 * 1000);
+
+        return () => {
+            clearInterval(timer);
+            clearInterval(pollTimer);
+        };
     }, []);
 
     const handleModeChange = (mode) => {
@@ -267,6 +310,146 @@ function App() {
         if (code >= 95) return { icon: "⛈️", title: "Thunderstorm at Sony", msg: "Heavy storms in Bangi! Stay inside. ⚡" };
         else if (code >= 51) return { icon: "☔", title: "Rainy at Sony", msg: "Don't forget your umbrella! Sky is drizzling. 🌧️" };
         else return { icon: "☀️", title: "Sunny at Sony Bangi", msg: "Clear skies! Have a productive workday. ✨" };
+    };
+
+    // --- LIVE IPU (AIR POLLUTANT INDEX) LOGIC FOR PUTRAJAYA ---
+    // Putrajaya is the closest official Department of Environment (DOE/JAS) air monitoring station to Sony Bangi (~10km)
+    const calculateIPUDetails = (current) => {
+        if (!current) return null;
+
+        const pm25 = typeof current.pm2_5 === 'number' ? current.pm2_5 : null;
+        const pm10 = typeof current.pm10 === 'number' ? current.pm10 : null;
+
+        // PM2.5 calculation according to Malaysian DOE / USEPA breakpoints:
+        let pm25Ipu = null;
+        if (pm25 !== null) {
+            if (pm25 <= 12.0) pm25Ipu = (50 / 12.0) * pm25;
+            else if (pm25 <= 35.4) pm25Ipu = ((100 - 51) / (35.4 - 12.1)) * (pm25 - 12.1) + 51;
+            else if (pm25 <= 55.4) pm25Ipu = ((150 - 101) / (55.4 - 35.5)) * (pm25 - 35.5) + 101;
+            else if (pm25 <= 150.4) pm25Ipu = ((200 - 151) / (150.4 - 55.5)) * (pm25 - 55.5) + 151;
+            else if (pm25 <= 250.4) pm25Ipu = ((300 - 201) / (250.4 - 150.5)) * (pm25 - 150.5) + 201;
+            else if (pm25 <= 350.4) pm25Ipu = ((400 - 301) / (350.4 - 250.5)) * (pm25 - 250.5) + 301;
+            else pm25Ipu = ((500 - 401) / (500.4 - 350.5)) * (pm25 - 350.5) + 401;
+        }
+
+        // PM10 calculation according to Malaysian DOE breakpoints:
+        let pm10Ipu = null;
+        if (pm10 !== null) {
+            if (pm10 <= 50) pm10Ipu = pm10;
+            else if (pm10 <= 150) pm10Ipu = ((100 - 51) / (150 - 51)) * (pm10 - 51) + 51;
+            else if (pm10 <= 350) pm10Ipu = ((200 - 101) / (350 - 151)) * (pm10 - 151) + 101;
+            else if (pm10 <= 420) pm10Ipu = ((300 - 201) / (420 - 351)) * (pm10 - 351) + 201;
+            else pm10Ipu = ((400 - 301) / (500 - 421)) * (pm10 - 421) + 301;
+        }
+
+        // Sub-indexes pool: pick the highest dominant pollutant (DOE standard rule)
+        const candidates = [pm25Ipu, pm10Ipu, current.us_aqi].filter(v => typeof v === 'number' && !isNaN(v));
+        const ipuVal = candidates.length ? Math.round(Math.max(...candidates)) : (current.us_aqi || 50);
+
+        // Determine dominant pollutant indicator
+        let dominant = "PM2.5";
+        if (pm10Ipu !== null && pm10Ipu > (pm25Ipu || 0)) dominant = "PM10";
+        if (current.ozone && current.ozone > 120) dominant = "O₃";
+
+        // Categorization based on Malaysian DOE APIMS official standards
+        let category = "Baik";
+        let categoryEn = "Good";
+        let levelClass = "good";
+        let color = "#34c759";
+        let icon = "🍃";
+        let advice = "Kualiti udara bersih & nyaman. Selamat untuk aktiviti luar & perjalanan pergi/balik kerja.";
+        let adviceEn = "Air quality is good. Safe for outdoor commute & activities.";
+
+        if (ipuVal <= 50) {
+            category = "Baik";
+            categoryEn = "Good";
+            levelClass = "good";
+            color = "#34c759";
+            icon = "🍃";
+            advice = "Kualiti udara bersih & nyaman. Selamat untuk aktiviti luar dan rehat.";
+            adviceEn = "Clean air quality. Safe for all outdoor activities.";
+        } else if (ipuVal <= 100) {
+            category = "Sederhana";
+            categoryEn = "Moderate";
+            levelClass = "moderate";
+            color = "#0284c7";
+            icon = "🌤️";
+            advice = "Kualiti udara sederhana. Tiada kesan mudarat kepada kesihatan umum.";
+            adviceEn = "Moderate air quality. Safe for daily commute & outdoor lunch.";
+        } else if (ipuVal <= 200) {
+            category = "Tidak Sihat";
+            categoryEn = "Unhealthy";
+            levelClass = "unhealthy";
+            color = "#ff9500";
+            icon = "😷";
+            advice = "Kualiti udara tidak sihat. Golongan berisiko dinasihatkan hadkan aktiviti luar.";
+            adviceEn = "Unhealthy air. Sensitive individuals should reduce outdoor exposure.";
+        } else if (ipuVal <= 300) {
+            category = "Sangat Tidak Sihat";
+            categoryEn = "Very Unhealthy";
+            levelClass = "very-unhealthy";
+            color = "#ff3b30";
+            icon = "⚠️";
+            advice = "Kualiti udara buruk. Pakai pelitup muka dan elakkan aktiviti fizikal di luar.";
+            adviceEn = "Very unhealthy air. Wear face mask and avoid outdoor exertion.";
+        } else {
+            category = "Berbahaya";
+            categoryEn = "Hazardous";
+            levelClass = "hazardous";
+            color = "#af52de";
+            icon = "🛑";
+            advice = "Amaran kecemasan! Kekal di dalam bangunan dan tutup tingkap.";
+            adviceEn = "Hazardous conditions. Stay strictly indoors.";
+        }
+
+        // Percentage for spectrum pointer (0-300+ scale)
+        const scalePercent = Math.min(100, Math.max(3, (ipuVal / 300) * 100));
+
+        const now = new Date();
+        const updateTimeStr = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+        return {
+            ipu: ipuVal,
+            category,
+            categoryEn,
+            levelClass,
+            color,
+            icon,
+            advice,
+            adviceEn,
+            dominant,
+            scalePercent,
+            pm2_5: current.pm2_5 ? current.pm2_5.toFixed(1) : "--",
+            pm10: current.pm10 ? current.pm10.toFixed(1) : "--",
+            ozone: current.ozone ? current.ozone.toFixed(1) : "--",
+            no2: current.nitrogen_dioxide ? current.nitrogen_dioxide.toFixed(1) : "--",
+            co: current.carbon_monoxide ? current.carbon_monoxide.toFixed(0) : "--",
+            lastUpdated: updateTimeStr
+        };
+    };
+
+    const fetchIpu = async () => {
+        setIpuLoading(true);
+        try {
+            // Putrajaya coordinates (nearest official DOE monitoring station to Sony Bangi ~10km)
+            const res = await fetch(
+                "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=2.9264&longitude=101.6964&current=us_aqi,european_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone"
+            );
+            const data = await res.json();
+            if (data && data.current) {
+                const processed = calculateIPUDetails(data.current);
+                setIpuData(processed);
+                try {
+                    localStorage.setItem('sony_ipu_cache', JSON.stringify(processed));
+                } catch (e) {
+                    // Ignore local storage error
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch IPU for Putrajaya", error);
+        } finally {
+            setIpuLoading(false);
+        }
     };
 
     // --- PRAYER TIME LOGIC ---
@@ -780,50 +963,150 @@ function App() {
 
                 {/* --- RIGHT PANEL: OVERTIME BREAKDOWN --- */}
                 <section className="dash-column">
-                    <div className="dash-card">
+                    {/* Compact OT Breakdown Preview Card */}
+                    <div className="dash-card ot-compact-card">
                         <div className="card-header">
-                            <h2>📊 OT Breakdown</h2>
-                            <span className="status-pill pill-info">30-min Tiers</span>
+                            <div className="ot-header-title">
+                                <h2>📊 OT Breakdown</h2>
+                                <span className="status-pill pill-info">30-min Tiers</span>
+                            </div>
+                            <button 
+                                type="button" 
+                                className="btn-see-more"
+                                onClick={() => setIsOtModalOpen(true)}
+                                title="Buka jadual OT penuh"
+                            >
+                                <span>See More</span>
+                                <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                            </button>
                         </div>
 
-                        <div className="table-responsive">
-                            <table className="ot-table">
-                                <thead>
-                                    <tr>
-                                        <th>OT Tier</th>
-                                        <th>Duration</th>
-                                        <th>Target Clock Out</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {calcResults?.otTableRows.map((row, index) => (
-                                        <tr key={index}>
-                                            <td>
-                                                <span className="ot-badge">{row.label}</span>
-                                            </td>
-                                            <td className="text-secondary">{row.duration}</td>
-                                            <td className="ot-time-cell">
-                                                {row.time12} <small className="text-secondary">({row.time})</small>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        {/* Quick 4-Pill Milestones */}
+                        <div className="ot-quick-grid">
+                            <div className="ot-quick-item" onClick={() => setIsOtModalOpen(true)} title="Klik untuk lihat butiran penuh">
+                                <span className="ot-quick-label">1h OT</span>
+                                <strong className="ot-quick-time">{calcResults?.otTableRows[0]?.time12 || "--:--"}</strong>
+                                <small>+1h 10m (break)</small>
+                            </div>
+                            <div className="ot-quick-item" onClick={() => setIsOtModalOpen(true)} title="Klik untuk lihat butiran penuh">
+                                <span className="ot-quick-label">2h OT</span>
+                                <strong className="ot-quick-time">{calcResults?.otTableRows[2]?.time12 || "--:--"}</strong>
+                                <small>+2h 10m</small>
+                            </div>
+                            <div className="ot-quick-item" onClick={() => setIsOtModalOpen(true)} title="Klik untuk lihat butiran penuh">
+                                <span className="ot-quick-label">3h OT</span>
+                                <strong className="ot-quick-time">{calcResults?.otTableRows[4]?.time12 || "--:--"}</strong>
+                                <small>+3h 10m</small>
+                            </div>
+                            <div className="ot-quick-item highlight" onClick={() => setIsOtModalOpen(true)} title="Klik untuk lihat butiran penuh">
+                                <span className="ot-quick-label">4h OT (Max)</span>
+                                <strong className="ot-quick-time">{calcResults?.otTableRows[6]?.time12 || "--:--"}</strong>
+                                <small>+4h 10m</small>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Live Weather Widget */}
-                    <div className="dash-card weather-card">
-                        <div className="weather-content">
-                            <div className="weather-icon-large">{weatherInfo.icon}</div>
-                            <div className="weather-details">
-                                <div className="weather-temp-row">
-                                    <h3>{weatherInfo.title}</h3>
+                    {/* Unified Environment Hub (Cuaca Bangi & IPU Putrajaya) */}
+                    <div className="dash-card env-card">
+                        <div className="card-header env-card-header">
+                            <div className="env-title-group">
+                                <h2>🌤️ Cuaca & IPU Udara</h2>
+                                <span className="status-pill pill-info">Bangi & Putrajaya</span>
+                            </div>
+                            <div className="env-header-actions">
+                                <span className="live-dot-indicator" title="Data pemantauan langsung">
+                                    <span className="live-dot"></span> LIVE
+                                </span>
+                                <button 
+                                    className={`ipu-refresh-btn ${ipuLoading ? 'spinning' : ''}`}
+                                    onClick={() => { fetchWeather(); fetchIpu(); }}
+                                    title="Muat semula Cuaca & IPU"
+                                    aria-label="Refresh Environment Data"
+                                >
+                                    <i className="fa-solid fa-arrows-rotate"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="env-tiles-grid">
+                            {/* Left Tile: Weather at Sony Bangi */}
+                            <div className="env-mini-tile weather-tile">
+                                <div className="tile-top">
+                                    <span className="tile-label"><i className="fa-solid fa-cloud-sun"></i> Sony Bangi</span>
                                     {weatherData && (
                                         <span className="temp-badge">{weatherData.temperature}°C</span>
                                     )}
                                 </div>
-                                <p>{weatherInfo.msg}</p>
+                                <div className="weather-tile-body">
+                                    <div className="weather-icon-tile">{weatherInfo.icon}</div>
+                                    <div className="weather-tile-info">
+                                        <h4>{weatherInfo.title}</h4>
+                                        <p>{weatherInfo.msg}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Tile: Live IPU in Putrajaya */}
+                            <div className={`env-mini-tile ipu-tile ipu-level-${ipuData?.levelClass || 'good'}`}>
+                                <div className="tile-top">
+                                    <span className="tile-label"><i className="fa-solid fa-wind"></i> IPU Putrajaya (~10km)</span>
+                                    {ipuData && (
+                                        <span className={`ipu-mini-pill ipu-pill-${ipuData.levelClass}`}>
+                                            {ipuData.icon} {ipuData.category}
+                                        </span>
+                                    )}
+                                </div>
+
+                                {ipuData ? (
+                                    <div className="ipu-tile-body">
+                                        <div className="ipu-tile-score-row">
+                                            <div className="ipu-tile-number-group">
+                                                <span className="ipu-tile-number">{ipuData.ipu}</span>
+                                                <span className="ipu-tile-unit">IPU</span>
+                                            </div>
+                                            <div className="ipu-tile-substats">
+                                                <span>PM2.5: <strong>{ipuData.pm2_5}</strong></span>
+                                                <span>PM10: <strong>{ipuData.pm10}</strong></span>
+                                            </div>
+                                        </div>
+
+                                        {/* Slim Minimalist Gauge Track */}
+                                        <div className="ipu-mini-track-wrap">
+                                            <div className="ipu-mini-track">
+                                                <div className="seg seg-good" title="Baik (0-50)"></div>
+                                                <div className="seg seg-mod" title="Sederhana (51-100)"></div>
+                                                <div className="seg seg-unhealthy" title="Tidak Sihat (101-200)"></div>
+                                                <div className="seg seg-vunhealthy" title="Sangat Tidak Sihat (201-300)"></div>
+                                                <div className="seg seg-hazard" title="Berbahaya (>300)"></div>
+                                                <div 
+                                                    className="mini-pin"
+                                                    style={{ left: `${ipuData.scalePercent}%` }}
+                                                    title={`IPU: ${ipuData.ipu}`}
+                                                ></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="ipu-tile-footer">
+                                            <span className="ipu-tile-advice" title={ipuData.adviceEn}>
+                                                {ipuData.advice}
+                                            </span>
+                                            <a 
+                                                href="https://apims.doe.gov.my" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="apims-mini-link"
+                                                title="Portal APIMS JAS Rasmi"
+                                            >
+                                                APIMS ↗
+                                            </a>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="ipu-loading-mini">
+                                        <i className="fa-solid fa-circle-notch fa-spin"></i>
+                                        <span>Memuatkan IPU...</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -849,6 +1132,160 @@ function App() {
                     </div>
                 </section>
             </main>
+
+            {/* --- OVERTIME DETAILS MODAL (Pop-up matching reference design) --- */}
+            {isOtModalOpen && (
+                <div className="modal-overlay" onClick={() => setIsOtModalOpen(false)}>
+                    <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+                        {/* Modal Header */}
+                        <div className="modal-top-bar">
+                            <span className="modal-kicker-pill">OVERTIME SCHEDULE & TIERS</span>
+                            <button 
+                                type="button" 
+                                className="modal-close-btn" 
+                                onClick={() => setIsOtModalOpen(false)}
+                                aria-label="Close modal"
+                            >
+                                <i className="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+
+                        <div className="modal-header-text">
+                            <h2>Overtime (OT) Breakdown</h2>
+                            <p>
+                                Target clock-out schedule calculated from base target <strong>{calcResults?.activeTarget12}</strong> ({calcResults?.activeTarget24}) for {shiftMode === 'full' ? 'Full Day Shift' : '2nd Half Shift'}.
+                            </p>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="modal-body">
+                            {/* Policy Overview Section */}
+                            <div className="modal-section">
+                                <h3 className="section-title">📌 Overtime Policy & Calculation Rules</h3>
+                                <p className="section-desc">
+                                    Standard shift concludes at <strong>{calcResults?.activeTarget12}</strong>. For the first overtime tier (1.0h OT), a mandatory <strong>10-minute rest break</strong> is included (+1h 10m total elapsed time). Subsequent overtime tiers advance in 30-minute intervals up to a maximum of 4.0 hours.
+                                </p>
+                            </div>
+
+                            {/* 3-Cards Architecture (matching reference image) */}
+                            <div className="modal-section">
+                                <h3 className="section-title">💡 OT Tiers & Quick Targets</h3>
+                                <div className="modal-cards-grid">
+                                    {/* Card 1: Early OT */}
+                                    <div className="modal-inner-card">
+                                        <div className="card-kicker">🟡 Early OT</div>
+                                        <ul className="modal-tier-list">
+                                            <li>
+                                                <span className="tier-name">1.0 Hour OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[0]?.time12}</strong>
+                                                <small className="tier-gap">+1h 10m (incl. break)</small>
+                                            </li>
+                                            <li>
+                                                <span className="tier-name">1.5 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[1]?.time12}</strong>
+                                                <small className="tier-gap">+1h 40m</small>
+                                            </li>
+                                        </ul>
+                                        <div className="card-note">Includes mandatory 10-minute gap.</div>
+                                    </div>
+
+                                    {/* Card 2: Mid OT */}
+                                    <div className="modal-inner-card">
+                                        <div className="card-kicker">🟠 Standard OT</div>
+                                        <ul className="modal-tier-list">
+                                            <li>
+                                                <span className="tier-name">2.0 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[2]?.time12}</strong>
+                                                <small className="tier-gap">+2h 10m</small>
+                                            </li>
+                                            <li>
+                                                <span className="tier-name">2.5 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[3]?.time12}</strong>
+                                                <small className="tier-gap">+2h 40m</small>
+                                            </li>
+                                        </ul>
+                                        <div className="card-note">Evening extended shift window.</div>
+                                    </div>
+
+                                    {/* Card 3: Extended / Max OT */}
+                                    <div className="modal-inner-card">
+                                        <div className="card-kicker">🔴 Extended OT</div>
+                                        <ul className="modal-tier-list">
+                                            <li>
+                                                <span className="tier-name">3.0 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[4]?.time12}</strong>
+                                                <small className="tier-gap">+3h 10m</small>
+                                            </li>
+                                            <li>
+                                                <span className="tier-name">3.5 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[5]?.time12}</strong>
+                                                <small className="tier-gap">+3h 40m</small>
+                                            </li>
+                                            <li>
+                                                <span className="tier-name">4.0 Hours OT:</span>
+                                                <strong className="tier-time">{calcResults?.otTableRows[6]?.time12}</strong>
+                                                <small className="tier-gap">+4h 10m (Max)</small>
+                                            </li>
+                                        </ul>
+                                        <div className="card-note">Maximum allowable daily OT.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Complete 30-Min Schedule Table */}
+                            <div className="modal-section">
+                                <h3 className="section-title">📋 Full 30-Minute Schedule Table</h3>
+                                <div className="table-responsive modal-table-wrap">
+                                    <table className="ot-table modal-ot-table">
+                                        <thead>
+                                            <tr>
+                                                <th>OT Tier</th>
+                                                <th>Duration Added</th>
+                                                <th>Target Clock Out (12h)</th>
+                                                <th>24h Format</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {calcResults?.otTableRows.map((row, index) => (
+                                                <tr key={index}>
+                                                    <td><span className="ot-badge">{row.label}</span></td>
+                                                    <td className="text-secondary">{row.duration}</td>
+                                                    <td className="ot-time-cell">{row.time12}</td>
+                                                    <td className="text-secondary font-mono">{row.time}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer Actions (matching reference design) */}
+                        <div className="modal-footer">
+                            <button 
+                                type="button" 
+                                className="modal-btn modal-btn-secondary" 
+                                onClick={() => {
+                                    if (calcResults?.otTableRows) {
+                                        const summaryText = calcResults.otTableRows.map(r => `${r.label}: ${r.time12}`).join('\n');
+                                        navigator.clipboard.writeText(`Sony Bangi OT Schedule (Base Out: ${calcResults.activeTarget12}):\n${summaryText}`);
+                                        alert("Overtime schedule copied to clipboard!");
+                                    }
+                                }}
+                            >
+                                <i className="fa-regular fa-copy"></i> Copy Schedule
+                            </button>
+                            <button 
+                                type="button" 
+                                className="modal-btn modal-btn-close" 
+                                onClick={() => setIsOtModalOpen(false)}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

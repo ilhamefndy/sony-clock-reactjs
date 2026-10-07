@@ -33,12 +33,13 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 ### 3. 📊 Shift Progress & OT Breakdown
 * **Live Progress & Countdown**: Real-time progress bar (0–100%) and dynamic countdown showing hours, minutes, and seconds remaining until clock-out.
 * **📋 Official 3-Column Schedule & Lookup Matrix**: Interactive table matching official company schedule lookup tables with active row highlighting and mode-aware 5-minute step intervals.
-* **📊 Overtime Breakdown**: Auto-calculated clock-out times for 1.0h to 4.0h of OT in **30-minute intervals** (1st hour includes mandatory 10-minute break gap).
+* **📊 Overtime Breakdown & "See More" Modal**: Compact main dashboard preview showing quick 4-tier milestones (`1h`, `2h`, `3h`, `4h`) paired with a **"See More"** button that opens a comprehensive documentation modal popup with policy explanations, 3-card tier architecture (Early, Standard, Extended OT), full 30-minute interval table, and one-click schedule copying.
 
 ---
 
 ### 4. 🌤️ Local Bangi Services & Utilities
 * **🌤️ Live Weather for Sony Bangi**: Real-time local temperature and weather status via Open-Meteo API.
+* **🍃 Live IPU (Air Pollutant Index) in Putrajaya**: Real-time air quality index monitoring for Putrajaya (the closest DOE station to Sony Bangi, ~10km). Displays official Malaysian IPU rating (Baik, Sederhana, Tidak Sihat, Sangat Tidak Sihat, Berbahaya), dynamic 5-band spectrum gauge, contextual health advisories (bilingual BM/EN), dominant pollutant detector, micro-chips for PM2.5, PM10, O₃, NO₂, and direct link to the official Department of Environment (JAS) APIMS portal.
 * **🕌 Islamic Prayer Times (Zone SGR01)**: Live today's prayer times (Subuh, Zohor, Asar, Maghrib, Isyak) via WaktuSolat API with live countdown to the next prayer.
 * **🌙 Dark / Light Mode**: Seamless dark and light themes with automatic system preference detection and `localStorage` persistence.
 * **👤 Portfolio Navigation**: Direct "Portfolio" button in header and footer pointing to [portfolio.ilhameffendy.com](https://portfolio.ilhameffendy.com) (Shift+Click to edit destination URL).
@@ -52,7 +53,8 @@ A modern, responsive React 18 web application designed specifically for **Sony B
 * **Styling**: Vanilla CSS (Custom Design System, Glassmorphism, HSL color system)
 * **Typography**: Google Fonts (*Plus Jakarta Sans* & *JetBrains Mono*)
 * **APIs**:
-  * [Open-Meteo API](https://open-meteo.com/) (Live Bangi Weather)
+  * [Open-Meteo Weather API](https://open-meteo.com/) (Live Bangi Weather)
+  * [Open-Meteo Air Quality API](https://open-meteo.com/) (Live Putrajaya PM2.5, PM10, AQI / IPU)
   * [WaktuSolat API](https://waktusolat.app/) (Zone SGR01 Prayer Times)
 
 ---
