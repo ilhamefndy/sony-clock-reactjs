@@ -745,7 +745,22 @@ body {
     color: var(--text-heading);
     outline: none;
     -webkit-appearance: none;
+    -moz-appearance: textfield;
+    appearance: none;
+    box-shadow: none;
+    caret-color: var(--primary);
     margin: 0;
+}
+
+.time-digit-box::-webkit-outer-spin-button,
+.time-digit-box::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.time-digit-box::selection {
+    background-color: var(--primary-glow);
+    color: var(--primary);
 }
 
 .time-colon {
@@ -782,6 +797,10 @@ body {
     color: var(--primary);
 }
 
+.stepper-btn:active {
+    transform: scale(0.85);
+}
+
 .native-clock-btn {
     background: transparent;
     border: none;
@@ -798,8 +817,12 @@ body {
 }
 
 .native-clock-btn:hover {
+    background: rgba(2, 132, 199, 0.15);
     color: var(--primary);
-    background: rgba(2, 132, 199, 0.12);
+}
+
+.native-clock-btn:active {
+    transform: scale(0.9);
 }
 
 .hidden-native-picker {
