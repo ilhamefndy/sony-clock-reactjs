@@ -158,6 +158,8 @@ body {
 
 /* --- iOS FROSTED GLASS HEADER --- */
 .app-header {
+    position: relative;
+    z-index: 50;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -256,10 +258,49 @@ body {
     align-items: flex-end;
 }
 
-.live-date {
-    font-size: clamp(0.725rem, 2vw, 0.8rem);
+.date-badge-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: none;
+    padding: 2px 6px;
+    border-radius: 8px;
     color: var(--text-muted);
+    font-size: clamp(0.725rem, 2vw, 0.8rem);
     font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: right;
+    font-family: inherit;
+}
+
+.date-badge-btn:hover {
+    background: var(--input-bg);
+    color: var(--primary);
+}
+
+.date-badge-btn i {
+    font-size: 0.75rem;
+    color: var(--primary);
+}
+
+.custom-date-pill {
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: #ff9500;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 1px 4px rgba(255, 149, 0, 0.35);
+}
+
+.live-date {
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
 }
 
 .live-time {
@@ -322,6 +363,151 @@ body {
 
 .portfolio-btn:active {
     transform: translateY(0) scale(0.96);
+}
+
+/* --- LANGUAGE DROPDOWN SELECTOR --- */
+.lang-dropdown-container {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    z-index: 70;
+}
+
+.lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--input-bg);
+    color: var(--text-heading);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: clamp(0.45rem, 1.5vw, 0.55rem) clamp(0.65rem, 1.8vw, 0.85rem);
+    border-radius: 14px;
+    font-size: clamp(0.75rem, 1.8vw, 0.825rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-family: inherit;
+}
+
+.lang-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.lang-flag-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 21px;
+    height: 15px;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    flex-shrink: 0;
+}
+
+.flag-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.lang-chevron {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease;
+}
+
+.lang-chevron.open {
+    transform: rotate(180deg);
+}
+
+.lang-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1.5px solid var(--card-border);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    border-radius: 16px;
+    box-shadow: 0 20px 48px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    min-width: 195px;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    z-index: 99999;
+    animation: langMenuPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+[data-theme="dark"] .lang-menu {
+    background: #0f172a;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="light"] .lang-menu {
+    background: #ffffff;
+    border-color: rgba(0, 122, 255, 0.25);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+@keyframes langMenuPop {
+    from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lang-menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--text-body);
+    font-size: 0.825rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    font-family: inherit;
+    gap: 0.6rem;
+}
+
+.lang-menu-item-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.lang-menu-item:hover {
+    background: rgba(2, 132, 199, 0.14);
+    color: var(--primary);
+}
+
+.lang-menu-item.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.lang-item-check {
+    font-size: 0.75rem;
+    color: var(--primary);
+}
+
+.header-actions-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .portfolio-btn-icon {
@@ -465,11 +651,19 @@ body {
     color: var(--info-text);
 }
 
-/* --- INPUT SECTION & iOS TIME INPUT --- */
+/* --- INPUT SECTION & UNIVERSAL TIME / DATE CONTROLS --- */
 .input-section {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+}
+
+.input-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .input-section label {
@@ -478,6 +672,34 @@ body {
     color: var(--text-heading);
 }
 
+.shift-date-inline-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.6rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.shift-date-inline-btn:hover {
+    color: var(--primary);
+    border-color: var(--primary-glow);
+    background: var(--card-bg);
+}
+
+.shift-date-inline-btn i {
+    color: var(--primary);
+    font-size: 0.75rem;
+}
+
+/* Universal Mobile-Keyboard-Friendly Time Input */
 .time-input-container {
     display: flex;
     flex-direction: row;
@@ -486,14 +708,13 @@ body {
     width: 100%;
 }
 
-input[type="time"] {
+.time-digit-container {
     flex: 1;
     min-width: 0;
-    text-align: center;
-    padding: 0.7rem 0.85rem;
-    font-family: 'JetBrains Mono', SFMono-Regular, monospace;
-    font-size: clamp(1.2rem, 4vw, 1.45rem);
-    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.6rem;
     border: 1.5px solid var(--input-border);
     background-color: var(--input-bg);
     backdrop-filter: blur(16px);
@@ -503,12 +724,93 @@ input[type="time"] {
     transition: all 0.25s ease;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
+    position: relative;
+    cursor: text;
 }
 
-input[type="time"]:focus {
-    outline: none;
+.time-digit-container:focus-within {
     border-color: var(--input-focus);
     box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.time-digit-box {
+    width: 2.7ch;
+    text-align: center;
+    padding: 0.35rem 0;
+    font-family: 'JetBrains Mono', SFMono-Regular, monospace;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    font-weight: 800;
+    border: none;
+    background: transparent;
+    color: var(--text-heading);
+    outline: none;
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.time-colon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+    font-weight: 800;
+    color: var(--primary);
+    user-select: none;
+    padding: 0 0.15rem;
+    line-height: 1;
+}
+
+.time-stepper-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: 0.3rem;
+}
+
+.stepper-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 1;
+    transition: all 0.15s ease;
+}
+
+.stepper-btn:hover {
+    background: rgba(2, 132, 199, 0.15);
+    color: var(--primary);
+}
+
+.native-clock-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    padding: 0.35rem 0.45rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.native-clock-btn:hover {
+    color: var(--primary);
+    background: rgba(2, 132, 199, 0.12);
+}
+
+.hidden-native-picker {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    border: none;
+    margin: 0;
+    padding: 0;
 }
 
 /* iOS Segmented AM / PM Toggle */
@@ -1394,6 +1696,153 @@ input[type="time"]:focus {
     border-color: var(--text-muted);
 }
 
+/* --- DATE SELECTOR MODAL (Universal Mobile & Desktop) --- */
+.date-modal-dialog {
+    max-width: 520px;
+}
+
+.date-presets-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.btn-date-preset {
+    padding: 0.6rem 0.5rem;
+    border-radius: 12px;
+    border: 1.5px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--text-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    font-family: inherit;
+}
+
+.btn-date-preset:hover {
+    border-color: var(--primary);
+    background: var(--card-bg);
+    transform: translateY(-1px);
+}
+
+.btn-date-preset.active {
+    background: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.btn-date-preset small {
+    font-size: 0.65rem;
+    opacity: 0.8;
+}
+
+.date-inputs-card {
+    background: var(--input-bg);
+    border: 1.5px solid var(--input-border);
+    border-radius: 18px;
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.date-numeric-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background: var(--card-bg);
+    border: 1.5px solid var(--input-border);
+    border-radius: 14px;
+    padding: 0.45rem 0.75rem;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.date-numeric-container:focus-within {
+    border-color: var(--input-focus);
+    box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.date-num-box {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: transparent;
+    border: none;
+    color: var(--text-heading);
+    outline: none;
+    padding: 0.25rem 0;
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.date-num-day, .date-num-month {
+    width: 2.8ch;
+}
+
+.date-num-year {
+    width: 5ch;
+}
+
+.date-sep {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 1.15rem;
+    user-select: none;
+}
+
+.date-native-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding-top: 0.35rem;
+    border-top: 1px dashed var(--input-border);
+}
+
+.date-native-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.date-native-input {
+    background: var(--card-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-heading);
+    padding: 0.4rem 0.65rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.date-native-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-btn-primary {
+    background: linear-gradient(135deg, #007AFF, #00C6FF);
+    color: #ffffff;
+    border: none;
+    box-shadow: 0 4px 14px var(--primary-glow);
+}
+
+.modal-btn-primary:hover {
+    background: linear-gradient(135deg, #0062cc, #00A3E0);
+    transform: translateY(-1px);
+}
+
 /* --- UNIFIED LOCAL ENVIRONMENT CARD (Cuaca Bangi & IPU Putrajaya) --- */
 .env-card {
     gap: 1rem;
@@ -1815,18 +2264,35 @@ input[type="time"]:focus {
     }
 
     .time-input-container {
-        gap: 0.5rem;
+        gap: 0.45rem;
     }
 
-    input[type="time"] {
-        padding: 0.6rem 0.4rem;
-        font-size: 1.2rem;
-        border-radius: 12px;
+    .time-digit-container {
+        padding: 0.35rem 0.45rem;
+    }
+
+    .time-digit-box {
+        font-size: 1.25rem;
+        width: 2.6ch;
+    }
+
+    .time-colon {
+        font-size: 1.25rem;
+    }
+
+    .native-clock-btn {
+        padding: 0.25rem;
+        font-size: 1rem;
+        margin-left: 0.1rem;
+    }
+
+    .period-toggle {
+        min-width: 95px;
     }
 
     .period-btn {
-        padding: 0.5rem 0.4rem;
-        font-size: 0.8rem;
+        padding: 0.5rem 0.35rem;
+        font-size: 0.775rem;
     }
 
     .preset-buttons {

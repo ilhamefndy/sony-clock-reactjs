@@ -7,9 +7,10 @@ description: >
   Full Day mode displays 1st Half Leave card (+4.75h) and restricts clock-in to AM only,
   2nd Half mode supports AM/PM clock-in (11:45 AM - 02:15 PM),
   early clock-in floor clamping (clocking in before 07:00 AM counts as 07:00 AM; before 11:45 AM in 2nd Half counts as 11:45 AM),
-  1-minute precision time picker with explicit AM/PM toggle,
+  universal dual-segment numeric time picker with mobile keyboard popup (inputmode="numeric"),
+  custom shift date selector modal with keyboard keypad entry,
   displays live weather for Sony Bangi (via Open-Meteo), Islamic prayer times for the SGR01 zone (via WaktuSolat API),
-  live IPU (Air Pollutant Index) for Putrajaya near Bangi (via Open-Meteo Air Quality API) with 5-band spectrum gauge & health advice,
+  accurate live IPU (Air Pollutant Index) calculated according to official Malaysian Department of Environment (JAS/DOE) APIMS standards with 5-band spectrum gauge & health advice,
   a live date/time clock, shift progress percentage with live countdown, quick-preset time selectors, persistent
   settings in localStorage, light/dark theme toggling, late-time calculation (after 09:30 AM for Full Day / after 02:15 PM for 2nd Half),
   explicit late-duration capping disclaimer ("Late by Xh Ym from 9:30 AM flex limit. Uncapped shift would end at 8:28 PM, capped at 7:00 PM max"),
@@ -39,6 +40,9 @@ This is a **single-page React 18 application** designed for Sony Bangi (Malaysia
 | **Live Weather** | Real-time weather for Sony Bangi from Open-Meteo with local temp & status messages |
 | **Live IPU (Putrajaya)** | Real-time Air Pollutant Index (IPU) from Putrajaya (~10km from Bangi) with 5-band spectrum gauge, health advice, and pollutant breakdown (PM2.5, PM10, O₃, NO₂) |
 | **Prayer Times** | Today's 5 prayer times (Subuh → Isyak) for zone SGR01 + next prayer countdown |
+| **Multi-Language Selector (i18n)** | Header language dropdown supporting **English (`en`)** as default, **Bahasa Melayu (`ms`)**, **Malaysian Chinese (`zh` / 简体中文)**, and **Japanese (`ja` / 日本語)** with zero mixed-language text across cards, modals, prayer schedules, IPU, and document titles |
+| **Universal Mobile Numeric Keypad** | Dual-segment time box (`[ HH ] : [ MM ]`) and Date Selector Modal (`[ DD ] / [ MM ] / [ YYYY ]`) with `inputmode="numeric"` guaranteeing software keypad popup on all mobile browsers |
+| **Accurate JAS/DOE APIMS IPU** | Calculated strictly per Malaysian Department of Environment APIMS breakpoints from PM2.5 and PM10, eliminating uncalibrated ozone spikes and US EPA AQI mismatches |
 | **Universal Responsive Layout** | 2-column grid dashboard on laptops/desktops & stacked single-column flow on smartphones |
-| **State Persistence** | Theme preference, selected shift mode, and last entered clock-in time persisted via `localStorage` |
+| **State Persistence** | Language preference, theme, shift mode, and last entered clock-in time persisted via `localStorage` |
 
